@@ -5,7 +5,7 @@ Remove-BuildFiles removes all obj and bin folders except under node_modules from
 #>
 function Remove-BuildFiles()
 {
-    Get-ChildItem -Directory -Recurse obj, bin | Where-Object { $_.FullName -notmatch "\\node_modules\\" } | Remove-Item -Recurse -Force
+  Get-ChildItem -Directory -Recurse obj, bin | Where-Object { $_.FullName -notmatch "\\node_modules\\" } | Remove-Item -Recurse -Force
 }
   
 <#
@@ -25,56 +25,56 @@ function Remove-BuildFiles()
 #>
 function Get-GitIgnore
 {
-    [CmdletBinding()]
-    param(
-        [string] $Name,
-        [switch] $ListAvailable,
-        [switch] $RefreshCache
-    )
-    process
+  [CmdletBinding()]
+  param(
+    [string] $Name,
+    [switch] $ListAvailable,
+    [switch] $RefreshCache
+  )
+  process
+  {
+    if ($ListAvailable)
     {
-        if ($ListAvailable)
-        {
-            $cacheFile = Join-Path $env:TEMP "gitignore_cache.json"
+      $cacheFile = Join-Path $env:TEMP "gitignore_cache.json"
 
-            if (-not $RefreshCache `
-                    -and (Test-Path $cacheFile) `
-                    -and ([DateTime]::UtcNow - (Get-ItemProperty $cacheFile LastWriteTimeUtc).LastWriteTimeUtc).TotalDays -lt 1)
-            {
-                Write-Debug "Loading options from cache"
-                $files = Get-Content $cacheFile -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
-            }
+      if (-not $RefreshCache `
+          -and (Test-Path $cacheFile) `
+          -and ([DateTime]::UtcNow - (Get-ItemProperty $cacheFile LastWriteTimeUtc).LastWriteTimeUtc).TotalDays -lt 1)
+      {
+        Write-Debug "Loading options from cache"
+        $files = Get-Content $cacheFile -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
+      }
 
-            if (-not $files)
-            {
-                Write-Debug "Loading options from github"
-                Invoke-Expression "git ls-remote https://github.com/github/gitignore master" | ForEach-Object { $_ -match "(?'hash'[a-f0-9]+)\s+refs\/heads\/master" } | Out-Null
-                $files = Invoke-RestMethod "https://api.github.com/repos/github/gitignore/git/trees/$($Matches["hash"])"
-                $files | ConvertTo-Json | Set-Content $cacheFile -Force
-            }
+      if (-not $files)
+      {
+        Write-Debug "Loading options from github"
+        Invoke-Expression "git ls-remote https://github.com/github/gitignore master" | ForEach-Object { $_ -match "(?'hash'[a-f0-9]+)\s+refs\/heads\/master" } | Out-Null
+        $files = Invoke-RestMethod "https://api.github.com/repos/github/gitignore/git/trees/$($Matches["hash"])"
+        $files | ConvertTo-Json | Set-Content $cacheFile -Force
+      }
 
-            if ($files)
-            {
-                return $files.tree |
-                    Where-Object { $_.path -match "\w+\.gitignore" } |
-                    Select-Object @{N = "Language"; E = { $_.path.substring(0, $_.path.length - ".gitignore".length) } } |
-                    Select-Object -ExpandProperty Language
-            }
-        }
-        else
-        {
-            $client = New-Object System.Net.WebClient
-            $path = Resolve-Path .
-            $path = Join-Path $path ".gitignore"
-            $client.DownloadFile("https://raw.githubusercontent.com/github/gitignore/master/$($Name).gitignore", $path)
-        }
+      if ($files)
+      {
+        return $files.tree |
+          Where-Object { $_.path -match "\w+\.gitignore" } |
+          Select-Object @{N = "Language"; E = { $_.path.substring(0, $_.path.length - ".gitignore".length) } } |
+          Select-Object -ExpandProperty Language
+      }
     }
+    else
+    {
+      $client = New-Object System.Net.WebClient
+      $path = Resolve-Path .
+      $path = Join-Path $path ".gitignore"
+      $client.DownloadFile("https://raw.githubusercontent.com/github/gitignore/master/$($Name).gitignore", $path)
+    }
+  }
 }
 
 # Register the autocompleter for the name parameter on the Get-GitIgnore cmdlet
 Register-ArgumentCompleter -CommandName Get-GitIgnore -ParameterName Name -ScriptBlock {
-    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-    Get-GitIgnore -ListAvailable | Where-Object { $_ -like "*$($wordToComplete)*" }
+  param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+  Get-GitIgnore -ListAvailable | Where-Object { $_ -like "*$($wordToComplete)*" }
 }
 
 <#
@@ -85,7 +85,7 @@ Register-ArgumentCompleter -CommandName Get-GitIgnore -ParameterName Name -Scrip
   #>
 function Start-Portainer()
 {
-    Invoke-Expression "docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer"
+  Invoke-Expression "docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer"
 }
   
 <#
@@ -96,25 +96,64 @@ function Start-Portainer()
   #>
 function Remove-StaleBranches([switch]$Force)
 {
-    $branches = Invoke-Expression "git branch -vv" | Select-String "^\s*(?'branch'[-a-zA-Z\/_0-9]+).*(?=: gone]).*$" -AllMatches `
-    | ForEach-Object { $_.Matches[0].Groups["branch"].value }
+  $branches = Invoke-Expression "git branch -vv" | Select-String "^\s*(?'branch'[-a-zA-Z\/_0-9]+).*(?=: gone]).*$" -AllMatches `
+  | ForEach-Object { $_.Matches[0].Groups["branch"].value }
   
-if (-not $Force -and $branches.count -gt 0)
-{
+  if (-not $Force -and $branches.count -gt 0)
+  {
     Write-Host "Deleting the following branches" -ForegroundColor Yellow
     foreach ($branch in $branches)
     {
-        Write-Host $branch
+      Write-Host $branch
     }
   
     $prompt = Read-Host -Prompt "Delete (y/n)?"
-}
+  }
   
-if ($Force -or $prompt -eq "y")
-{
+  if ($Force -or $prompt -eq "y")
+  {
     foreach ($branch in $branches)
     {
-        Invoke-Expression "git branch -D $($branch)"
+      Invoke-Expression "git branch -D $($branch)"
     } 
+  }
 }
+
+<#
+.SYNOPSIS
+  Sets the title of the current console window / tab.
+.EXAMPLE
+  PS C:\> Set-Title test
+  Will set the title of the current window or tab to "test".
+.INPUTS
+  (optional) Title - The title to set. This will default to the current folder path if omitted.
+#>
+function Set-Title(
+  [Parameter(Mandatory = $false)] $Title = $null)
+{
+  if (!$Title)
+  {
+    $Title = (Get-Location).path
+  }
+
+  $host.UI.rawUI.WindowTitle = $Title
+}
+
+<#
+.SYNOPSIS
+  Copies the current working folder to the clipboard.
+#>
+function Copy-CurrentPath()
+{
+  Get-Location | Set-Clipboard
+}
+
+
+<#
+.SYNOPSIS
+  Edit the hosts file.
+#>
+function Edit-Hosts()
+{
+  start-process notepad -verb runas -Args C:\windows\system32\drivers\etc\hosts
 }
