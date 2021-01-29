@@ -157,3 +157,14 @@ function Edit-Hosts()
 {
   start-process notepad -verb runas -Args C:\windows\system32\drivers\etc\hosts
 }
+
+<#
+.SYNOPSIS
+  Installs the Azure CLI tools or upgrades them using the MSI installer.
+#>
+function Install-AzureCli()
+{
+  Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi
+  Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
+  Remove-Item .\AzureCLI.msi
+}
