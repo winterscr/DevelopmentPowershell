@@ -6,8 +6,9 @@
 .(Join-Path $PSScriptRoot 'functions/Dotnet.ps1')
 .(Join-Path $PSScriptRoot 'functions/Kubernetes.ps1')
 .(Join-Path $PSScriptRoot 'functions/New-Project.ps1')
+.(Join-Path $PSScriptRoot 'functions/New-SqlServerDocker.ps1')
 
 Export-ModuleMember Remove-BuildFiles, Get-GitIgnore, Update-EventGrid, Start-Portainer, `
     Show-OutdatedReport, Remove-StaleBranches, ConvertTo-Base64, ConvertFrom-Base64, Edit-UserSecrets, `
     Set-Title, Copy-CurrentPath, Edit-Hosts, Use-MiniKube, Use-DockerDesktop, Install-AzureCli, `
-    New-Project
+    New-Project, New-SqlServerDocker, Remove-SqlServerDocker
