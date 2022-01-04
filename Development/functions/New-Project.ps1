@@ -17,7 +17,7 @@ function New-Project([string] $SolutionName, [string] $ProjectName, [string] $Pr
 
     cd src/app
     dotnet new tool-manifest
-    dotnet tool install paket
+    dotnet tool install paket --ignore-failed-sources
     dotnet paket init && dotnet paket install && dotnet paket restore
 
     dotnet new sln --name $SolutionName
