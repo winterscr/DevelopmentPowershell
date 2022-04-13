@@ -168,3 +168,12 @@ function Install-AzureCli()
   Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
   Remove-Item .\AzureCLI.msi
 }
+
+<#
+.SYNOPSIS
+  Opens the first solution file found in the src/app folder.
+#>
+function Open-Solution()
+{
+  Get-ChildItem src/app/*.sln | Select-Object -First 1 | Invoke-Expression
+}
