@@ -177,3 +177,17 @@ function Open-Solution()
 {
   Get-ChildItem src/app/*.sln | Select-Object -First 1 | Invoke-Expression
 }
+
+<#
+.SYNOPSIS
+  Creates a new draft pull request in the current Azure Repos project for the specified
+  source path and opens it in the system default browser. Uses the current branch if not specified.
+#>
+function New-PullRequest([string]$SourceBranch = $null)
+{
+  if(!$SourceBranch){
+    $SourceBranch = Invoke-Expression "git branch --show-current"
+  }
+
+  Invoke-Expression "az repos pr create --draft --open -s $SourceBranch" | ConvertFrom-Json | Select-Object -ExpandProperty "url"
+}
