@@ -11,5 +11,5 @@
 Export-ModuleMember Remove-BuildFiles, Get-GitIgnore, Update-EventGrid, Start-Portainer, `
     Show-OutdatedReport, Remove-StaleBranches, ConvertTo-Base64, ConvertFrom-Base64, Edit-UserSecrets, `
     Set-Title, Copy-CurrentPath, Edit-Hosts, Use-MiniKube, Use-DockerDesktop, Install-AzureCli, `
-    New-Project, New-SqlServerDocker, Remove-SqlServerDocker, Open-Solution, New-PullRequest, `
-    New-AzuriteContainer
+    New-Project, Open-Solution, New-PullRequest, `
+    New-AzuriteContainer, New-MongoContainer, New-SqlServerContainer, Remove-SqlServerContainer

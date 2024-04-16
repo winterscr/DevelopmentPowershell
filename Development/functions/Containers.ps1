@@ -30,16 +30,45 @@ function Remove-SqlServerContainer([string] $Name, [switch] $DeleteVolume) {
 }
 
 function New-AzuriteContainer([string][parameter(Mandatory = $false)] $Volume, [switch] $CreateVolume, [string][parameter(Mandatory = $false)] $ContainerName) {
-    if(!$Volume){
+    if (!$Volume) {
         $volumePath = "C:\docker_volumes\azurite"
     }
 
-    $volumePath = Resolve-Path $volumePath
+    runContainer `
+        -ImageName "mcr.microsoft.com/azure-storage/azurite" `
+        -DockerOptions "-p 10000:10000 -p 10001:10001 -p 10002:10002 -d" `
+        -Volume $volumePath `
+        -DataPath "/data" `
+        -CreateVolume $CreateVolume `
+        -ContainerName $ContainerName
+}
 
-    if (!(Test-Path $volumePath)) {
+function New-MongoContainer([string][parameter(Mandatory = $false)] $Volume, [switch] $CreateVolume, [string][parameter(Mandatory = $false)] $ContainerName) {
+    if (!$Volume) {
+        $volumePath = "C:\docker_volumes\mongodb"
+    }
+
+    runContainer `
+        -ImageName "mongo:latest" `
+        -DockerOptions "-p 27017:27017 -d" `
+        -Volume $volumePath `
+        -DataPath "/data/db" `
+        -CreateVolume $CreateVolume `
+        -ContainerName $ContainerName
+}
+
+function runContainer(
+    $ImageName,
+    $DockerOptions,
+    $Volume,
+    $DataPath,
+    $CreateVolume,
+    $ContainerName) {
+
+    if (!(Test-Path $Volume)) {
         if ($CreateVolume) {
-            Write-Host -ForegroundColor Green "Volume folder not found, creating '$($volumePath)'"
-            New-Item -Path $volumePath -ItemType Directory
+            Write-Host -ForegroundColor Green "Volume folder not found, creating '$($Volume)'"
+            New-Item -Path $Volume -ItemType Directory > $null
         }
         else {
             Write-Error "Volume folder not found and CreateVolume was not specified"
@@ -47,13 +76,13 @@ function New-AzuriteContainer([string][parameter(Mandatory = $false)] $Volume, [
         }
     }
 
-    $dockerCommand = "docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 -v $($volumePath):/data"
+    $dockerCommand = "docker run $($DockerOptions) -v $($Volume):$($DataPath)"
 
     if ($ContainerName) {
-        $dockerCommand += " --name $ContainerName"
+        $dockerCommand += " --name $($ContainerName)"
     }
 
-    $dockerCommand += " mcr.microsoft.com/azure-storage/azurite"
+    $dockerCommand += " $($ImageName)"
 
     Invoke-Expression $dockerCommand
 }
